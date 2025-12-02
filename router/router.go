@@ -12,15 +12,15 @@ func SetupRoutes(app *fiber.App) {
 
 	api := app.Group("/api")
 
-	// Book
+	// Feed
 	feed := api.Group("/feed")
-	feed.Get("/", controller.GetBooks)
-	feed.Get("/:id", controller.GetBook)
+	feed.Get("/", controller.GetFeeds)
+	feed.Get("/:id", controller.GetFeed)
 
 	feed.Use(middleware.JWTProtected)
-	feed.Post("/", controller.CreateBook)
-	feed.Patch("/:id", controller.UpdateBook)
-	feed.Delete("/:id", controller.DeleteBook)
+	feed.Post("/", controller.CreateFeed)
+	feed.Patch("/:id", controller.UpdateFeed)
+	feed.Delete("/:id", controller.DeleteFeed)
 
 	// Auth
 	auth := api.Group("/auth")

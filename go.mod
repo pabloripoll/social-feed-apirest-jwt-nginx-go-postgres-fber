@@ -7,6 +7,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
+	github.com/rabbitmq/amqp091-go v1.10.0
 	golang.org/x/crypto v0.24.0
 	gorm.io/gorm v1.25.12
 )

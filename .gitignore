@@ -27,3 +27,5 @@ supervisord.log
 # Repository
 /vault
 /main
+/go.sum
+/.air.toml

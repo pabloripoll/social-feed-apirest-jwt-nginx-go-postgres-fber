@@ -2,7 +2,7 @@ package controller
 
 import (
 	"apirest/database"
-	"apirest/model"
+	"apirest/domain/feed/model"
 
 	"github.com/gofiber/fiber/v2"
 )

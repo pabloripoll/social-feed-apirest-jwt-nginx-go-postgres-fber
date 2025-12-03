@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"apirest/model"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -26,10 +25,9 @@ func Connect() {
 	}
 	fmt.Println("Connection opened to database")
 
-	// Migrate the schemas
-	err = DB.AutoMigrate(&model.Feed{}, &model.User{})
-	if err != nil {
-		panic("Failed to migrate database schemas!")
+	// Run migrations (moved to database/migration.go)
+	if err := RunMigrations(DB); err != nil {
+		panic("Failed to migrate database schemas: " + err.Error())
 	}
 	fmt.Println("Database migrated.")
 }

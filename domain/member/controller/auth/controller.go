@@ -1,8 +1,8 @@
 package controller
 
 import (
+	"apirest/domain/user/model"
 	"apirest/database"
-	"apirest/model"
 	"apirest/utils"
 
 	"github.com/gofiber/fiber/v2"

@@ -1,7 +1,9 @@
 package router
 
 import (
-	"apirest/controller"
+	memberAuth "apirest/domain/member/controller/auth"
+	//memberProfile "apirest/domain/member/controller/profile"
+	feedPost "apirest/domain/feed/controller"
 	"apirest/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,16 +22,20 @@ func SetupRoutes(app *fiber.App) {
 
 	// Auth
 	auth := api.Group("/auth")
-	auth.Post("/login", controller.Login)
-	auth.Post("/register", controller.Register)
+	auth.Post("/login", memberAuth.Login)
+	auth.Post("/register", memberAuth.Register)
+
+	// Member Account
+	//account := api.Group("/account")
+	//account.get("/", memberProfile.Profile)
 
 	// Feed
 	feed := api.Group("/feed")
-	feed.Get("/", controller.GetFeeds)
-	feed.Get("/:id", controller.GetFeed)
+	feed.Get("/", feedPost.GetFeeds)
+	feed.Get("/:id", feedPost.GetFeed)
 
 	feed.Use(middleware.JWTProtected)
-	feed.Post("/", controller.CreateFeed)
-	feed.Patch("/:id", controller.UpdateFeed)
-	feed.Delete("/:id", controller.DeleteFeed)
+	feed.Post("/", feedPost.CreateFeed)
+	feed.Patch("/:id", feedPost.UpdateFeed)
+	feed.Delete("/:id", feedPost.DeleteFeed)
 }

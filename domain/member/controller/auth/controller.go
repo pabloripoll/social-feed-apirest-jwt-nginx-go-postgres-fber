@@ -17,7 +17,7 @@ func Register(c *fiber.Ctx) error {
 	}
 	user := model.User{
 		Email:        req.Email,
-		PasswordHash: utils.GeneratePassword(req.Password),
+		Password: utils.GeneratePassword(req.Password),
 	}
 	res := database.DB.Create(&user)
 	if res.Error != nil {
@@ -44,13 +44,13 @@ func Login(c *fiber.Ctx) error {
 			"message": "user not found",
 		})
 	}
-	if !utils.ComparePassword(user.PasswordHash, req.Password) {
+	if !utils.ComparePassword(user.Password, req.Password) {
 		return c.Status(400).JSON(fiber.Map{
 			"message": "incorrect password",
 		})
 	}
 
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(uint(user.ID))
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"message": err.Error(),

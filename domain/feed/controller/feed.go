@@ -2,18 +2,18 @@ package controller
 
 import (
 	"apirest/database"
-	"apirest/domain/feed/model"
+	feedPostModel "apirest/domain/feed/model/feed_post"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type feedRequest struct {
-	Title  string `json:"title" validate:"required"`
-	Author string `json:"author" validate:"required"`
+	Title string `json:"title" validate:"required"`
 }
 
 func GetFeeds(c *fiber.Ctx) error {
-	var feeds []model.Feed
+	var feeds []feedPostModel.FeedPost
 
 	database.DB.Find(&feeds)
 
@@ -23,21 +23,28 @@ func GetFeeds(c *fiber.Ctx) error {
 func GetFeed(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	var feed model.Feed
-	database.DB.Find(&feed, id)
+	var feed feedPostModel.FeedPost
+	resp := database.DB.First(&feed, id)
+	if resp.Error != nil {
+		if resp.Error == gorm.ErrRecordNotFound {
+			return c.Status(404).SendString("No feed found with ID")
+		}
+		return c.Status(500).SendString(resp.Error.Error())
+	}
 
 	return c.JSON(feed)
 }
 
 func CreateFeed(c *fiber.Ctx) error {
-	var feed feedRequest
-	if err := c.BodyParser(&feed); err != nil {
+	var req feedRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).SendString(err.Error())
 	}
 
-	feedModel := model.Feed{
-		Title:  feed.Title,
-		Author: feed.Author,
+	// FeedPost.Title is *string in the model, so take a pointer to the local value.
+	title := req.Title
+	feedModel := feedPostModel.FeedPost{
+		Title: &title,
 	}
 
 	resp := database.DB.Create(&feedModel)
@@ -45,24 +52,35 @@ func CreateFeed(c *fiber.Ctx) error {
 		return c.Status(400).SendString(resp.Error.Error())
 	}
 
-	return c.JSON(feed)
+	// Return the created resource (including ID)
+	return c.Status(201).JSON(feedModel)
 }
 
 func UpdateFeed(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	var feed feedRequest
-	if err := c.BodyParser(&feed); err != nil {
+	var req feedRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).SendString(err.Error())
 	}
 
-	var oldFeed model.Feed
-	database.DB.Find(&oldFeed, id)
-	if oldFeed.Title == "" {
-		return c.Status(404).SendString("No feed found with ID")
+	var oldFeed feedPostModel.FeedPost
+	resp := database.DB.First(&oldFeed, id)
+	if resp.Error != nil {
+		if resp.Error == gorm.ErrRecordNotFound {
+			return c.Status(404).SendString("No feed found with ID")
+		}
+		return c.Status(500).SendString(resp.Error.Error())
 	}
 
-	database.DB.Model(&oldFeed).Updates(feed)
+	// Prepare pointer for the Title field
+	title := req.Title
+	if err := database.DB.Model(&oldFeed).Updates(feedPostModel.FeedPost{Title: &title}).Error; err != nil {
+		return c.Status(500).SendString(err.Error())
+	}
+
+	// Reload updated record
+	database.DB.First(&oldFeed, id)
 
 	return c.JSON(oldFeed)
 }
@@ -70,14 +88,19 @@ func UpdateFeed(c *fiber.Ctx) error {
 func DeleteFeed(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	var feed model.Feed
+	var feed feedPostModel.FeedPost
 
-	database.DB.Find(&feed, id)
-	if feed.Title == "" {
-		return c.Status(404).SendString("No feed found with ID")
+	resp := database.DB.First(&feed, id)
+	if resp.Error != nil {
+		if resp.Error == gorm.ErrRecordNotFound {
+			return c.Status(404).SendString("No feed found with ID")
+		}
+		return c.Status(500).SendString(resp.Error.Error())
 	}
 
-	database.DB.Delete(&feed)
+	if err := database.DB.Delete(&feed).Error; err != nil {
+		return c.Status(500).SendString(err.Error())
+	}
 
 	return c.SendString("Feed successfully deleted")
 }
